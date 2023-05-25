@@ -6,26 +6,21 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"sync"
 )
 
 type Data struct {
 	Path   string
 	Header []string
 	Table  [][]string
-	rw     *sync.RWMutex
 }
 
 func New(path string) *Data {
 	return &Data{
-		rw:   new(sync.RWMutex),
 		Path: path,
 	}
 }
 
 func (d *Data) ReadHeader() error {
-	d.rw.RLock()
-	defer d.rw.RUnlock()
 
 	rf, err := os.Open(d.Path)
 	if err != nil {
@@ -33,13 +28,12 @@ func (d *Data) ReadHeader() error {
 	}
 	defer rf.Close()
 
-	// 从文件开始，偏移0
+  // at begin of file, offset is 0
 	_, err = rf.Seek(0, 0)
 	if err != nil {
 		return err
 	}
 
-	// 读取csv文件
 	reader := csv.NewReader(rf)
 	column, err := reader.Read()
 	if err != nil {
@@ -51,8 +45,6 @@ func (d *Data) ReadHeader() error {
 }
 
 func (d *Data) ReadTable() error {
-	d.rw.RLock()
-	defer d.rw.RUnlock()
 
 	rf, err := os.Open(d.Path)
 	if err != nil {
@@ -71,7 +63,6 @@ func (d *Data) ReadTable() error {
 		return err
 	}
 
-	// 读取csv文件
 	cr := csv.NewReader(rf)
 	table, err := cr.ReadAll()
 	if err != nil {
@@ -83,8 +74,6 @@ func (d *Data) ReadTable() error {
 }
 
 func (d *Data) WriteHeader() error {
-	d.rw.Lock()
-	defer d.rw.Unlock()
 
 	if len(d.Header) == 1 {
 		d.Header = append(d.Header, "")
@@ -120,8 +109,6 @@ func (d *Data) WriteHeader() error {
 }
 
 func (d *Data) WriteTable() error {
-	d.rw.Lock()
-	defer d.rw.Unlock()
 
 	wf, err := os.OpenFile(d.Path, os.O_RDWR, fs.ModePerm)
 	if err != nil {
@@ -134,13 +121,12 @@ func (d *Data) WriteTable() error {
 		return err
 	}
 
-	// 偏移一行
+	// offset one line
 	_, err = wf.Seek(int64(len(line))+1, io.SeekStart)
 	if err != nil {
 		return err
 	}
 
-	// 写入表格
 	writer := csv.NewWriter(wf)
 	defer writer.Flush()
 
