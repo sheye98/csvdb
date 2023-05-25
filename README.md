@@ -1,11 +1,6 @@
 # Support CSV CRUD for Golang 
 
-***
-# 介绍
-***
-
 # Column
-***
 ## Add 
 Add column by using Column.add()
 
