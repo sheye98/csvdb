@@ -78,4 +78,4 @@ func (c *Column) Alter(before string, after string) error {
 	return nil
 }
 
-// TODO 删除列
+// TODO Delete column
